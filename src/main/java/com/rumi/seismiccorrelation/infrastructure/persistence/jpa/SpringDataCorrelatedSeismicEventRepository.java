@@ -6,4 +6,6 @@ import java.util.UUID;
 
 public interface SpringDataCorrelatedSeismicEventRepository
         extends JpaRepository<CorrelatedSeismicEventEntity, UUID> {
+
+    boolean existsBySeismicEventIdAndBuildingId(UUID seismicEventId, UUID buildingId);
 }

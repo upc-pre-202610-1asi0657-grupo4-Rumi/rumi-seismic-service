@@ -32,6 +32,7 @@ class SeismicEventApplicationServiceTest {
     private IgpFeedClient igpFeedClient;
     private IgpFeedOperation igpFeedOperation;
     private SeismicEventRepository repository;
+    private SeismicCorrelationApplicationService correlationService;
     private SeismicEventApplicationService service;
 
     @BeforeEach
@@ -39,7 +40,8 @@ class SeismicEventApplicationServiceTest {
         igpFeedClient = mock(IgpFeedClient.class);
         igpFeedOperation = mock(IgpFeedOperation.class);
         repository = mock(SeismicEventRepository.class);
-        service = new SeismicEventApplicationService(igpFeedClient, igpFeedOperation, repository);
+        correlationService = mock(SeismicCorrelationApplicationService.class);
+        service = new SeismicEventApplicationService(igpFeedClient, igpFeedOperation, repository, correlationService);
     }
 
     @Test
@@ -49,6 +51,7 @@ class SeismicEventApplicationServiceTest {
         when(repository.save(FROM_IGP)).thenReturn(STORED);
 
         assertThat(service.getLatestEvent()).isSameAs(STORED);
+        verify(correlationService).processOfficialEvent(STORED);
     }
 
     @Test
@@ -58,6 +61,7 @@ class SeismicEventApplicationServiceTest {
 
         assertThat(service.getLatestEvent()).isSameAs(STORED);
         verify(repository, never()).save(any());
+        verify(correlationService, never()).processOfficialEvent(any());
     }
 
     @Test

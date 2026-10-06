@@ -21,19 +21,22 @@ public class SeismicEventApplicationService {
     private final IgpFeedClient igpFeedClient;
     private final IgpFeedOperation igpFeedOperation;
     private final SeismicEventRepository seismicEventRepository;
+    private final SeismicCorrelationApplicationService correlationApplicationService;
 
     public SeismicEventApplicationService(
             IgpFeedClient igpFeedClient,
             IgpFeedOperation igpFeedOperation,
-            SeismicEventRepository seismicEventRepository
+            SeismicEventRepository seismicEventRepository,
+            SeismicCorrelationApplicationService correlationApplicationService
     ) {
         this.igpFeedClient = igpFeedClient;
         this.igpFeedOperation = igpFeedOperation;
         this.seismicEventRepository = seismicEventRepository;
+        this.correlationApplicationService = correlationApplicationService;
     }
 
     /**
-     * US13: latest event reported by the IGP, stored if it is new. When the IGP gives no event
+     * US13: latest event reported by the IGP, stored (and correlated) if it is new. When the IGP gives no event
      * (it failed or its circuit is open), the latest stored event is returned instead.
      */
     public SeismicEvent getLatestEvent() {
@@ -58,10 +61,13 @@ public class SeismicEventApplicationService {
         if (stored.isPresent()) {
             return stored.get();
         }
+        SeismicEvent saved;
         try {
-            return seismicEventRepository.save(event);
+            saved = seismicEventRepository.save(event);
         } catch (DataIntegrityViolationException storedConcurrently) {
             return seismicEventRepository.findSameOccurrence(event).orElseThrow(() -> storedConcurrently);
         }
+        correlationApplicationService.processOfficialEvent(saved);
+        return saved;
     }
 }

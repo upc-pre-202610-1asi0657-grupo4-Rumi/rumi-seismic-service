@@ -28,4 +28,10 @@ public class JpaCorrelatedSeismicEventRepository implements CorrelatedSeismicEve
     public Optional<CorrelatedSeismicEvent> findById(UUID id) {
         return springDataRepository.findById(id).map(CorrelatedSeismicEventEntity::toDomain);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsBySeismicEventIdAndBuildingId(UUID seismicEventId, UUID buildingId) {
+        return springDataRepository.existsBySeismicEventIdAndBuildingId(seismicEventId, buildingId);
+    }
 }

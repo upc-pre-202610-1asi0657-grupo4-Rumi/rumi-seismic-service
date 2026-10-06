@@ -83,4 +83,13 @@ class JpaCorrelatedSeismicEventRepositoryTest {
         assertThat(riskIndex.getAffectedZones()).extracting(AffectedZoneReport::zone)
                 .containsExactly("FLOOR-3-NORTH", "FLOOR-2-NORTH");
     }
+
+    @Test
+    void tellsWhetherAnEventIsAlreadyCorrelatedWithABuilding() {
+        repository.save(CorrelatedSeismicEvent.detect(seismicEventId, BUILDING_ID, Instant.parse("2026-10-06T15:31:00Z")));
+        entityManager.flush();
+
+        assertThat(repository.existsBySeismicEventIdAndBuildingId(seismicEventId, BUILDING_ID)).isTrue();
+        assertThat(repository.existsBySeismicEventIdAndBuildingId(seismicEventId, UUID.randomUUID())).isFalse();
+    }
 }

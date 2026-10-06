@@ -11,4 +11,6 @@ public interface CorrelatedSeismicEventRepository {
     CorrelatedSeismicEvent save(CorrelatedSeismicEvent correlatedEvent);
 
     Optional<CorrelatedSeismicEvent> findById(UUID id);
+
+    boolean existsBySeismicEventIdAndBuildingId(UUID seismicEventId, UUID buildingId);
 }

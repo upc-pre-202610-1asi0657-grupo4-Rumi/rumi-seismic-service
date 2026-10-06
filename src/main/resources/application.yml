@@ -25,6 +25,17 @@ rumi:
     # Must return the JSON shape of IgpSeismicEventResponse (see README).
     latest-event-url: ${IGP_LATEST_EVENT_URL:http://localhost:8099/igp/latest-event}
     timeout: 5s
+  correlation:
+    # A reading belongs to an event when it is recorded within this time after the event.
+    window: 5m
+    # How long received readings are kept in memory to be correlated.
+    retention: 30m
+    max-readings-per-building: 10000
+    # Vibration that maps to a structural response of 1 (the maximum).
+    vibration-reference: 1.0
+  risk:
+    # rule-based (rule-based-v1) or ai (ai-placeholder-v1)
+    strategy: rule-based
 
 resilience4j:
   circuitbreaker:
