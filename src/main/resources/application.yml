@@ -37,6 +37,8 @@ rumi:
     # rule-based (rule-based-v1) or ai (ai-placeholder-v1)
     strategy: rule-based
 
+# IGP feed protection (QA-05): a call taking more than 5 s fails; with 50% of the calls of the
+# sliding window failing the circuit opens and the IGP is not called for 60 s.
 resilience4j:
   circuitbreaker:
     instances:
@@ -45,7 +47,12 @@ resilience4j:
         sliding-window-size: 4
         minimum-number-of-calls: 2
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 60s
+  timelimiter:
+    instances:
+      igpFeed:
+        timeout-duration: 5s
+        cancel-running-future: true
 
 springdoc:
   api-docs:
