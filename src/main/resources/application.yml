@@ -9,15 +9,16 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
-
-# This service owns seismiceventsdb (PostgreSQL). It has no persistent entities yet,
-# so no connection is opened; these settings become spring.datasource when seismic
-# events and risk indexes are persisted.
-rumi:
+  # This service owns seismiceventsdb (PostgreSQL).
   datasource:
     url: ${SEISMIC_DB_URL:jdbc:postgresql://localhost:5432/seismiceventsdb}
     username: ${SEISMIC_DB_USERNAME:postgres}
     password: ${SEISMIC_DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: false
+    # No migration tool yet: Hibernate keeps the schema up to date.
+    hibernate:
+      ddl-auto: update
 
 resilience4j:
   circuitbreaker:
