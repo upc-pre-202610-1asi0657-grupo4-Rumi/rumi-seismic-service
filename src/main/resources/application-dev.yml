@@ -1,0 +1,21 @@
+# Development profile: runs with no external infrastructure.
+# Start with --spring.profiles.active=dev
+spring:
+  datasource:
+    url: jdbc:h2:mem:seismiceventsdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  rabbitmq:
+    listener:
+      simple:
+        # No RabbitMQ in dev: the SensorReadingRecorded listener is not started.
+        auto-startup: false
+
+rumi:
+  igp:
+    stub:
+      # true makes the stub IGP feed fail, to see the fallback and the 503 response.
+      fail: false
