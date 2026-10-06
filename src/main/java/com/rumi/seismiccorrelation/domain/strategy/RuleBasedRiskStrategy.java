@@ -2,6 +2,13 @@ package com.rumi.seismiccorrelation.domain.strategy;
 
 public final class RuleBasedRiskStrategy implements RiskCalculationStrategy {
 
+    public static final String MODEL_VERSION = "rule-based-v1";
+
+    @Override
+    public String modelVersion() {
+        return MODEL_VERSION;
+    }
+
     @Override
     public double calculateRiskIndex(double normalizedStructuralResponse) {
         validate(normalizedStructuralResponse);
