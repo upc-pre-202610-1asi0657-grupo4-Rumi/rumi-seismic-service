@@ -17,4 +17,7 @@ public interface SeismicEventRepository {
     Optional<SeismicEvent> findSameOccurrence(SeismicEvent event);
 
     Optional<SeismicEvent> findById(UUID id);
+
+    /** The stored event that occurred last. */
+    Optional<SeismicEvent> findLatest();
 }

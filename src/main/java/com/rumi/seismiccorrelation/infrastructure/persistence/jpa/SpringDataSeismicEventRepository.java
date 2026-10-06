@@ -14,4 +14,6 @@ public interface SpringDataSeismicEventRepository extends JpaRepository<SeismicE
             Double epicenterLatitude,
             Double epicenterLongitude
     );
+
+    Optional<SeismicEventEntity> findFirstByOrderByOccurredAtDesc();
 }

@@ -34,6 +34,11 @@ public class JpaSeismicEventRepository implements SeismicEventRepository {
         return springDataRepository.findById(id).map(SeismicEventEntity::toDomain);
     }
 
+    @Override
+    public Optional<SeismicEvent> findLatest() {
+        return springDataRepository.findFirstByOrderByOccurredAtDesc().map(SeismicEventEntity::toDomain);
+    }
+
     private static UUID storedIdOf(SeismicEvent event) {
         try {
             return UUID.fromString(event.getId());

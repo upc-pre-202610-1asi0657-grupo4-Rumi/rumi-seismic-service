@@ -20,6 +20,12 @@ spring:
     hibernate:
       ddl-auto: update
 
+rumi:
+  igp:
+    # Must return the JSON shape of IgpSeismicEventResponse (see README).
+    latest-event-url: ${IGP_LATEST_EVENT_URL:http://localhost:8099/igp/latest-event}
+    timeout: 5s
+
 resilience4j:
   circuitbreaker:
     instances:

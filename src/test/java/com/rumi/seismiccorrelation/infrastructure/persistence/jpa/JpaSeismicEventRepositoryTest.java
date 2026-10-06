@@ -73,6 +73,23 @@ class JpaSeismicEventRepositoryTest {
         }).isInstanceOfAny(DataIntegrityViolationException.class, jakarta.persistence.PersistenceException.class);
     }
 
+    @Test
+    void findsTheEventThatOccurredLast() {
+        repository.save(new SeismicEvent("IGP-1", 4.1, Instant.parse("2026-10-01T08:00:00Z"), -13.0, -76.0, 20.0));
+        repository.save(new SeismicEvent("IGP-2", 5.8, Instant.parse("2026-10-06T15:29:41Z"), -12.05, -77.12, 38.0));
+        repository.save(new SeismicEvent("IGP-3", 3.9, Instant.parse("2026-10-03T22:10:00Z"), -14.0, -75.0, 60.0));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(repository.findLatest()).hasValueSatisfying(
+                latest -> assertThat(latest.getOccurredAt()).isEqualTo(Instant.parse("2026-10-06T15:29:41Z")));
+    }
+
+    @Test
+    void findsNoLatestEventWhenNothingIsStored() {
+        assertThat(repository.findLatest()).isEmpty();
+    }
+
     private static SeismicEvent igpEvent(String code, double magnitude) {
         return new SeismicEvent(
                 code, magnitude, "Mw", Instant.parse("2026-10-06T15:29:41Z"),

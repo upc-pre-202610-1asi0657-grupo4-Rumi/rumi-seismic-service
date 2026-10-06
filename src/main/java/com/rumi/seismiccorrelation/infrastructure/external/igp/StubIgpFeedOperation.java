@@ -29,10 +29,12 @@ public class StubIgpFeedOperation implements IgpFeedOperation {
         return new IgpSeismicEventResponse(
                 "IGP/CENSIS/RS 2026-0412",
                 5.8,
+                "Mw",
                 Instant.parse("2026-10-06T15:29:41Z"),
                 -12.05,
                 -77.12,
-                38.0
+                38.0,
+                "Callao, 35 km SW"
         );
     }
 }
