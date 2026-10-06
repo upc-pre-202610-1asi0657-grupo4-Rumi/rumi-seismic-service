@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,5 +83,29 @@ class SeismicEventApplicationServiceTest {
         when(repository.findLatest()).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getLatestEvent()).isInstanceOf(SeismicFeedUnavailableException.class);
+    }
+
+    @Test
+    void listsTheStoredEventsInTheRange() {
+        Instant from = Instant.parse("2026-10-01T00:00:00Z");
+        Instant to = Instant.parse("2026-10-07T00:00:00Z");
+        when(repository.findOccurredBetween(from, to)).thenReturn(List.of(STORED));
+
+        assertThat(service.listEvents(from, to)).containsExactly(STORED);
+    }
+
+    @Test
+    void listsEveryStoredEventWithoutBounds() {
+        when(repository.findOccurredBetween(null, null)).thenReturn(List.of(STORED));
+
+        assertThat(service.listEvents(null, null)).containsExactly(STORED);
+    }
+
+    @Test
+    void rejectsAReversedRange() {
+        assertThatThrownBy(() -> service.listEvents(
+                Instant.parse("2026-10-07T00:00:00Z"), Instant.parse("2026-10-01T00:00:00Z")))
+                .isInstanceOf(InvalidQueryException.class)
+                .hasMessage("from must not be after to");
     }
 }

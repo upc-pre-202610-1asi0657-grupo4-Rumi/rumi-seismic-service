@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +89,32 @@ class JpaSeismicEventRepositoryTest {
     @Test
     void findsNoLatestEventWhenNothingIsStored() {
         assertThat(repository.findLatest()).isEmpty();
+    }
+
+    @Test
+    void findsTheEventsOfARangeNewestFirstWithOptionalInclusiveBounds() {
+        repository.save(new SeismicEvent("IGP-1", 4.1, Instant.parse("2026-10-01T08:00:00Z"), -13.0, -76.0, 20.0));
+        repository.save(new SeismicEvent("IGP-2", 5.8, Instant.parse("2026-10-06T15:29:41Z"), -12.05, -77.12, 38.0));
+        repository.save(new SeismicEvent("IGP-3", 3.9, Instant.parse("2026-10-03T22:10:00Z"), -14.0, -75.0, 60.0));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(occurrences(null, null)).containsExactly(
+                "2026-10-06T15:29:41Z", "2026-10-03T22:10:00Z", "2026-10-01T08:00:00Z");
+        assertThat(occurrences("2026-10-03T22:10:00Z", null)).containsExactly(
+                "2026-10-06T15:29:41Z", "2026-10-03T22:10:00Z");
+        assertThat(occurrences(null, "2026-10-03T22:10:00Z")).containsExactly(
+                "2026-10-03T22:10:00Z", "2026-10-01T08:00:00Z");
+        assertThat(occurrences("2026-10-02T00:00:00Z", "2026-10-04T00:00:00Z")).containsExactly(
+                "2026-10-03T22:10:00Z");
+    }
+
+    private List<String> occurrences(String from, String to) {
+        return repository.findOccurredBetween(
+                        from == null ? null : Instant.parse(from), to == null ? null : Instant.parse(to))
+                .stream()
+                .map(event -> event.getOccurredAt().toString())
+                .toList();
     }
 
     private static SeismicEvent igpEvent(String code, double magnitude) {

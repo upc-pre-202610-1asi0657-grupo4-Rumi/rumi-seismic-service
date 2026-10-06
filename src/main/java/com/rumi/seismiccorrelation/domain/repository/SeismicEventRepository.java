@@ -2,6 +2,8 @@ package com.rumi.seismiccorrelation.domain.repository;
 
 import com.rumi.seismiccorrelation.domain.model.SeismicEvent;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +22,7 @@ public interface SeismicEventRepository {
 
     /** The stored event that occurred last. */
     Optional<SeismicEvent> findLatest();
+
+    /** Events that occurred between from and to (both inclusive, both optional), newest first. */
+    List<SeismicEvent> findOccurredBetween(Instant from, Instant to);
 }

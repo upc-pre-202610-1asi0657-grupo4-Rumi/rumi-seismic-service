@@ -2,8 +2,12 @@ package com.rumi.seismiccorrelation.infrastructure.persistence.jpa;
 
 import com.rumi.seismiccorrelation.domain.model.SeismicEvent;
 import com.rumi.seismiccorrelation.domain.repository.SeismicEventRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,6 +41,17 @@ public class JpaSeismicEventRepository implements SeismicEventRepository {
     @Override
     public Optional<SeismicEvent> findLatest() {
         return springDataRepository.findFirstByOrderByOccurredAtDesc().map(SeismicEventEntity::toDomain);
+    }
+
+    @Override
+    public List<SeismicEvent> findOccurredBetween(Instant from, Instant to) {
+        Specification<SeismicEventEntity> occurredBetween = (root, query, builder) -> builder.and(
+                from == null ? builder.conjunction() : builder.greaterThanOrEqualTo(root.get("occurredAt"), from),
+                to == null ? builder.conjunction() : builder.lessThanOrEqualTo(root.get("occurredAt"), to)
+        );
+        return springDataRepository.findAll(occurredBetween, Sort.by(Sort.Direction.DESC, "occurredAt")).stream()
+                .map(SeismicEventEntity::toDomain)
+                .toList();
     }
 
     private static UUID storedIdOf(SeismicEvent event) {

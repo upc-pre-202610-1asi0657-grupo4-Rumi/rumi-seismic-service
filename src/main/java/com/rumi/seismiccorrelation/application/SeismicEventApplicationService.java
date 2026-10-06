@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -41,6 +43,14 @@ public class SeismicEventApplicationService {
         }
         LOGGER.warn("No event from the IGP feed, falling back to the latest stored event");
         return seismicEventRepository.findLatest().orElseThrow(SeismicFeedUnavailableException::new);
+    }
+
+    /** US13: stored events, newest first, optionally between from and to (both inclusive). */
+    public List<SeismicEvent> listEvents(Instant from, Instant to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new InvalidQueryException("from must not be after to");
+        }
+        return seismicEventRepository.findOccurredBetween(from, to);
     }
 
     private SeismicEvent storeIfNew(SeismicEvent event) {
