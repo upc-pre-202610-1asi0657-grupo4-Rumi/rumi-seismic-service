@@ -28,3 +28,9 @@ resilience4j:
         minimum-number-of-calls: 2
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
