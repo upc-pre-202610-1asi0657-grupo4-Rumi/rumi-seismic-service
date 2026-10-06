@@ -92,4 +92,32 @@ class JpaCorrelatedSeismicEventRepositoryTest {
         assertThat(repository.existsBySeismicEventIdAndBuildingId(seismicEventId, BUILDING_ID)).isTrue();
         assertThat(repository.existsBySeismicEventIdAndBuildingId(seismicEventId, UUID.randomUUID())).isFalse();
     }
+
+    @Test
+    void findsTheCorrelationOfTheBuildingWithTheMostRecentRiskIndex() {
+        CorrelatedSeismicEvent older = analyzed("2026-10-01T08:02:00Z");
+        CorrelatedSeismicEvent newer = analyzed("2026-10-06T15:32:10Z");
+        repository.save(CorrelatedSeismicEvent.detect(seismicEventId, BUILDING_ID, Instant.parse("2026-10-07T00:00:00Z")));
+        repository.save(newer);
+        repository.save(older);
+        repository.save(analyzedFor(UUID.randomUUID(), "2026-10-08T00:00:00Z"));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(repository.findLatestWithRiskIndexByBuildingId(BUILDING_ID))
+                .hasValueSatisfying(found -> assertThat(found.getId()).isEqualTo(newer.getId()));
+        assertThat(repository.findLatestWithRiskIndexByBuildingId(UUID.randomUUID())).isEmpty();
+    }
+
+    private CorrelatedSeismicEvent analyzed(String calculatedAt) {
+        return analyzedFor(BUILDING_ID, calculatedAt);
+    }
+
+    private CorrelatedSeismicEvent analyzedFor(UUID buildingId, String calculatedAt) {
+        CorrelatedSeismicEvent correlation = CorrelatedSeismicEvent.detect(
+                seismicEventId, buildingId, Instant.parse(calculatedAt));
+        correlation.analyze(new RiskIndex(
+                UUID.randomUUID(), RiskLevel.LOW, Instant.parse(calculatedAt), "rule-based-v1", List.of()));
+        return correlation;
+    }
 }

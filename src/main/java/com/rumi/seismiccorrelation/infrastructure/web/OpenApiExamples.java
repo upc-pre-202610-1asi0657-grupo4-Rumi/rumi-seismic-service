@@ -64,6 +64,34 @@ public final class OpenApiExamples {
               "instance": "/api/v1/seismic-events"
             }""";
 
+    public static final String RISK_INDEX = """
+            {
+              "id": "c3a1e8d2-6b7f-4d09-9a21-5e8f7b6c4d3a",
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+              "correlatedEventId": "9e8d7c6b-5a49-4382-b1a0-f9e8d7c6b5a4",
+              "level": "HIGH",
+              "calculatedAt": "2026-10-06T15:32:10Z",
+              "modelVersion": "rule-based-v1"
+            }""";
+
+    public static final String ERROR_BUILDING_WITHOUT_RISK_INDEX = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Building 0f1e2d3c-4b5a-4968-8776-5a4b3c2d1e0f has no risk index",
+              "instance": "/api/v1/buildings/0f1e2d3c-4b5a-4968-8776-5a4b3c2d1e0f/risk-indexes/latest"
+            }""";
+
+    public static final String ERROR_MALFORMED_BUILDING_ID = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "buildingId must be a valid UUID",
+              "instance": "/api/v1/buildings/building-7/risk-indexes/latest"
+            }""";
+
     private OpenApiExamples() {
     }
 }

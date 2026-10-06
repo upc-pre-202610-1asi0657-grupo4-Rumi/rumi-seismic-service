@@ -2,6 +2,7 @@ package com.rumi.seismiccorrelation.infrastructure.persistence.jpa;
 
 import com.rumi.seismiccorrelation.domain.model.CorrelatedSeismicEvent;
 import com.rumi.seismiccorrelation.domain.repository.CorrelatedSeismicEventRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,5 +34,14 @@ public class JpaCorrelatedSeismicEventRepository implements CorrelatedSeismicEve
     @Transactional(readOnly = true)
     public boolean existsBySeismicEventIdAndBuildingId(UUID seismicEventId, UUID buildingId) {
         return springDataRepository.existsBySeismicEventIdAndBuildingId(seismicEventId, buildingId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CorrelatedSeismicEvent> findLatestWithRiskIndexByBuildingId(UUID buildingId) {
+        return springDataRepository.findWithRiskIndexByBuildingIdNewestFirst(buildingId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .map(CorrelatedSeismicEventEntity::toDomain);
     }
 }

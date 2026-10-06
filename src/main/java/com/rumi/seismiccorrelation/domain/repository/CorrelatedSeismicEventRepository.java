@@ -13,4 +13,7 @@ public interface CorrelatedSeismicEventRepository {
     Optional<CorrelatedSeismicEvent> findById(UUID id);
 
     boolean existsBySeismicEventIdAndBuildingId(UUID seismicEventId, UUID buildingId);
+
+    /** The correlation of the building whose risk index was calculated last. */
+    Optional<CorrelatedSeismicEvent> findLatestWithRiskIndexByBuildingId(UUID buildingId);
 }

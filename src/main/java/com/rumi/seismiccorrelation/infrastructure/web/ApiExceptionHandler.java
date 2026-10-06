@@ -1,6 +1,7 @@
 package com.rumi.seismiccorrelation.infrastructure.web;
 
 import com.rumi.seismiccorrelation.application.InvalidQueryException;
+import com.rumi.seismiccorrelation.application.ResourceNotFoundException;
 import com.rumi.seismiccorrelation.application.SeismicFeedUnavailableException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSourceResolvable;
@@ -37,6 +38,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .header(HttpHeaders.RETRY_AFTER, RETRY_AFTER_SECONDS)
                 .body(ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage()));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ProblemDetail handleNotFound(ResourceNotFoundException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
     @ExceptionHandler(InvalidQueryException.class)
