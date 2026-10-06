@@ -78,4 +78,43 @@ class RiskIndexesControllerTest {
                 .andExpect(jsonPath("$.detail").value("buildingId must be a valid UUID"));
         verifyNoInteractions(queryService);
     }
+
+    @Test
+    void returnsTheAffectedZonesOrderedBySeverity() throws Exception {
+        when(queryService.getAffectedZones(RISK_INDEX_ID))
+                .thenReturn(CORRELATION.getRiskIndex().orElseThrow().getAffectedZones());
+
+        mockMvc.perform(get("/api/v1/risk-indexes/{riskIndexId}/affected-zones", RISK_INDEX_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().json(OpenApiExamples.AFFECTED_ZONES, true));
+    }
+
+    @Test
+    void returnsAnEmptyListBelowMedium() throws Exception {
+        when(queryService.getAffectedZones(RISK_INDEX_ID)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/risk-indexes/{riskIndexId}/affected-zones", RISK_INDEX_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    void returns404WhenTheRiskIndexDoesNotExist() throws Exception {
+        UUID unknown = UUID.fromString("6d5c4b3a-2f1e-4d0c-9b8a-7f6e5d4c3b2a");
+        when(queryService.getAffectedZones(unknown))
+                .thenThrow(new ResourceNotFoundException("Risk index " + unknown + " does not exist"));
+
+        mockMvc.perform(get("/api/v1/risk-indexes/{riskIndexId}/affected-zones", unknown))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Risk index " + unknown + " does not exist"));
+    }
+
+    @Test
+    void returns400WhenTheRiskIndexIdIsNotAUuid() throws Exception {
+        mockMvc.perform(get("/api/v1/risk-indexes/latest-risk/affected-zones"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("riskIndexId must be a valid UUID"));
+        verifyNoInteractions(queryService);
+    }
 }

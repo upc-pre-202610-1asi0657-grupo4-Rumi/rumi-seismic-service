@@ -109,6 +109,19 @@ class JpaCorrelatedSeismicEventRepositoryTest {
         assertThat(repository.findLatestWithRiskIndexByBuildingId(UUID.randomUUID())).isEmpty();
     }
 
+    @Test
+    void findsTheCorrelationThatProducedARiskIndex() {
+        CorrelatedSeismicEvent correlation = analyzed("2026-10-06T15:32:10Z");
+        repository.save(correlation);
+        entityManager.flush();
+        entityManager.clear();
+        UUID riskIndexId = correlation.getRiskIndex().orElseThrow().getId();
+
+        assertThat(repository.findByRiskIndexId(riskIndexId))
+                .hasValueSatisfying(found -> assertThat(found.getId()).isEqualTo(correlation.getId()));
+        assertThat(repository.findByRiskIndexId(UUID.randomUUID())).isEmpty();
+    }
+
     private CorrelatedSeismicEvent analyzed(String calculatedAt) {
         return analyzedFor(BUILDING_ID, calculatedAt);
     }

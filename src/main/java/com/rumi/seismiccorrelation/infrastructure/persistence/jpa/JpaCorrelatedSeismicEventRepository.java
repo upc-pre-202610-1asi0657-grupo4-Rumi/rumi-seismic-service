@@ -44,4 +44,10 @@ public class JpaCorrelatedSeismicEventRepository implements CorrelatedSeismicEve
                 .findFirst()
                 .map(CorrelatedSeismicEventEntity::toDomain);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CorrelatedSeismicEvent> findByRiskIndexId(UUID riskIndexId) {
+        return springDataRepository.findByRiskIndexId(riskIndexId).map(CorrelatedSeismicEventEntity::toDomain);
+    }
 }

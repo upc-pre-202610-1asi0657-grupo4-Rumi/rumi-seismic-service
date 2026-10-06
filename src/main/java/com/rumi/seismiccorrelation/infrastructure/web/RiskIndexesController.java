@@ -1,9 +1,11 @@
 package com.rumi.seismiccorrelation.infrastructure.web;
 
 import com.rumi.seismiccorrelation.application.RiskIndexQueryService;
+import com.rumi.seismiccorrelation.infrastructure.web.dto.AffectedZoneResponse;
 import com.rumi.seismiccorrelation.infrastructure.web.dto.RiskIndexResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -81,5 +84,65 @@ public class RiskIndexesController {
             @PathVariable UUID buildingId
     ) {
         return RiskIndexResponse.fromDomain(queryService.getLatestRiskIndex(buildingId));
+    }
+
+    @GetMapping("/risk-indexes/{riskIndexId}/affected-zones")
+    @Operation(
+            summary = "List the affected zones of a risk index",
+            description = "US12. Returns the zones of the building affected by the seismic event, ordered by "
+                    + "severity (rank 1 is the most affected). Zones are only reported when the risk level is "
+                    + "MEDIUM or higher, so a LOW risk index returns an empty list."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Affected zones ordered by severity rank (empty list below MEDIUM)",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    array = @ArraySchema(schema = @Schema(implementation = AffectedZoneResponse.class)),
+                    examples = {
+                            @ExampleObject(
+                                    name = "affectedZones",
+                                    summary = "Two affected zones of a HIGH risk index",
+                                    value = OpenApiExamples.AFFECTED_ZONES
+                            ),
+                            @ExampleObject(name = "lowRisk", summary = "LOW risk index, no affected zones",
+                                    value = "[]")
+                    }
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "riskIndexId is not a UUID",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = @ExampleObject(
+                            name = "malformedRiskIndexId",
+                            summary = "riskIndexId is not a UUID",
+                            value = OpenApiExamples.ERROR_MALFORMED_RISK_INDEX_ID
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "The risk index does not exist",
+            content = @Content(
+                    mediaType = OpenApiExamples.PROBLEM_JSON,
+                    schema = @Schema(implementation = ProblemDetail.class),
+                    examples = @ExampleObject(
+                            name = "unknownRiskIndex",
+                            summary = "Unknown risk index",
+                            value = OpenApiExamples.ERROR_UNKNOWN_RISK_INDEX
+                    )
+            )
+    )
+    public List<AffectedZoneResponse> getAffectedZones(
+            @Parameter(description = "Risk index whose affected zones are listed", required = true,
+                    example = OpenApiExamples.RISK_INDEX_ID)
+            @PathVariable UUID riskIndexId
+    ) {
+        return queryService.getAffectedZones(riskIndexId).stream()
+                .map(AffectedZoneResponse::fromDomain)
+                .toList();
     }
 }

@@ -16,4 +16,7 @@ public interface CorrelatedSeismicEventRepository {
 
     /** The correlation of the building whose risk index was calculated last. */
     Optional<CorrelatedSeismicEvent> findLatestWithRiskIndexByBuildingId(UUID buildingId);
+
+    /** The correlation that produced the risk index. */
+    Optional<CorrelatedSeismicEvent> findByRiskIndexId(UUID riskIndexId);
 }

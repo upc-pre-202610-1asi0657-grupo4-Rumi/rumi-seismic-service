@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SpringDataCorrelatedSeismicEventRepository
@@ -23,4 +24,11 @@ public interface SpringDataCorrelatedSeismicEventRepository
             @Param("buildingId") UUID buildingId,
             Pageable pageable
     );
+
+    @Query("""
+            select correlation from CorrelatedSeismicEventEntity correlation
+            join correlation.riskIndex riskIndex
+            where riskIndex.id = :riskIndexId
+            """)
+    Optional<CorrelatedSeismicEventEntity> findByRiskIndexId(@Param("riskIndexId") UUID riskIndexId);
 }

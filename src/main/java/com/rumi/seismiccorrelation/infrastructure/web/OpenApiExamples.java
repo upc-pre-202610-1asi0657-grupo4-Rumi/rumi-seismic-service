@@ -92,6 +92,30 @@ public final class OpenApiExamples {
               "instance": "/api/v1/buildings/building-7/risk-indexes/latest"
             }""";
 
+    public static final String AFFECTED_ZONES = """
+            [
+              { "zone": "FLOOR-3-NORTH", "severityRank": 1 },
+              { "zone": "FLOOR-2-NORTH", "severityRank": 2 }
+            ]""";
+
+    public static final String ERROR_UNKNOWN_RISK_INDEX = """
+            {
+              "type": "about:blank",
+              "title": "Not Found",
+              "status": 404,
+              "detail": "Risk index 6d5c4b3a-2f1e-4d0c-9b8a-7f6e5d4c3b2a does not exist",
+              "instance": "/api/v1/risk-indexes/6d5c4b3a-2f1e-4d0c-9b8a-7f6e5d4c3b2a/affected-zones"
+            }""";
+
+    public static final String ERROR_MALFORMED_RISK_INDEX_ID = """
+            {
+              "type": "about:blank",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "riskIndexId must be a valid UUID",
+              "instance": "/api/v1/risk-indexes/latest-risk/affected-zones"
+            }""";
+
     private OpenApiExamples() {
     }
 }
