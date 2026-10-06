@@ -15,6 +15,9 @@ spring:
         auto-startup: false
 
 rumi:
+  dev:
+    # Loads the sample event, correlation, risk index and affected zones of the sample building.
+    sample-data: true
   igp:
     stub:
       # true makes the stub IGP feed fail, to see the fallback and the 503 response.

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +24,11 @@ import java.util.UUID;
 /**
  * Sample data of the dev profile, with the ids used in the OpenAPI examples: one seismic event,
  * its correlation with the sample building, a HIGH risk index and two affected zones.
+ * Disabled with rumi.dev.sample-data=false.
  */
 @Component
 @Profile("dev")
+@ConditionalOnProperty(name = "rumi.dev.sample-data", havingValue = "true", matchIfMissing = true)
 public class DevDataSeeder implements ApplicationRunner {
 
     public static final UUID BUILDING_ID = UUID.fromString("7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d");
