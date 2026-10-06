@@ -1,12 +1,12 @@
-package com.rumi;
+package com.rumi.seismiccorrelation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RumiApplication {
+public class SeismicCorrelationServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(RumiApplication.class, args);
+        SpringApplication.run(SeismicCorrelationServiceApplication.class, args);
     }
 }

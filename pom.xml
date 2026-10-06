@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.rumi</groupId>
-    <artifactId>building-management-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>Rumi Building Management Service</name>
-    <description>Building Management bounded context for Rumi</description>
+    <artifactId>rumi-seismic-service</artifactId>
+    <version>0.1.0</version>
+    <name>Rumi Seismic Service</name>
+    <description>Seismic Correlation bounded context for Rumi</description>
 
     <properties>
         <java.version>21</java.version>
@@ -25,19 +25,11 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-json</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -47,11 +39,6 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
             <version>${resilience4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

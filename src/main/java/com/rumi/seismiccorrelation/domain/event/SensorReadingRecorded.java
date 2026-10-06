@@ -5,8 +5,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Seismic Correlation's own copy of the event contract published by Structural Monitoring.
- * The other context is referenced by identifiers only.
+ * This service's own copy of the event contract published by rumi-monitoring-service.
+ * The publishing service is referenced by identifiers only.
  */
 public record SensorReadingRecorded(
         UUID eventId,
