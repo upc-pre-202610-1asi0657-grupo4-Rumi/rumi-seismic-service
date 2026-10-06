@@ -1,6 +1,7 @@
 package com.rumi.seismiccorrelation.infrastructure.external.igp;
 
 import com.rumi.seismiccorrelation.domain.model.SeismicEvent;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -11,7 +12,7 @@ class IgpFeedClientTest {
 
     @Test
     void convertsAnIgpResponseToTheRumiDomainModel() {
-        IgpFeedClient client = new IgpFeedClient(new IgpSeismicEventMapper());
+        IgpFeedClient client = new IgpFeedClient(new IgpSeismicEventMapper(), TimeLimiterRegistry.ofDefaults());
         Instant timestamp = Instant.parse("2026-10-06T14:25:00Z");
         IgpSeismicEventResponse response = new IgpSeismicEventResponse(
                 "IGP-2026-001",

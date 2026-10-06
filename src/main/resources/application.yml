@@ -9,16 +9,36 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
-
-# This service owns seismiceventsdb (PostgreSQL). It has no persistent entities yet,
-# so no connection is opened; these settings become spring.datasource when seismic
-# events and risk indexes are persisted.
-rumi:
+  # This service owns seismiceventsdb (PostgreSQL).
   datasource:
     url: ${SEISMIC_DB_URL:jdbc:postgresql://localhost:5432/seismiceventsdb}
     username: ${SEISMIC_DB_USERNAME:postgres}
     password: ${SEISMIC_DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: false
+    # No migration tool yet: Hibernate keeps the schema up to date.
+    hibernate:
+      ddl-auto: update
 
+rumi:
+  igp:
+    # Must return the JSON shape of IgpSeismicEventResponse (see README).
+    latest-event-url: ${IGP_LATEST_EVENT_URL:http://localhost:8099/igp/latest-event}
+    timeout: 5s
+  correlation:
+    # A reading belongs to an event when it is recorded within this time after the event.
+    window: 5m
+    # How long received readings are kept in memory to be correlated.
+    retention: 30m
+    max-readings-per-building: 10000
+    # Vibration that maps to a structural response of 1 (the maximum).
+    vibration-reference: 1.0
+  risk:
+    # rule-based (rule-based-v1) or ai (ai-placeholder-v1)
+    strategy: rule-based
+
+# IGP feed protection (QA-05): a call taking more than 5 s fails; with 50% of the calls of the
+# sliding window failing the circuit opens and the IGP is not called for 60 s.
 resilience4j:
   circuitbreaker:
     instances:
@@ -27,7 +47,12 @@ resilience4j:
         sliding-window-size: 4
         minimum-number-of-calls: 2
         failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
+        wait-duration-in-open-state: 60s
+  timelimiter:
+    instances:
+      igpFeed:
+        timeout-duration: 5s
+        cancel-running-future: true
 
 springdoc:
   api-docs:

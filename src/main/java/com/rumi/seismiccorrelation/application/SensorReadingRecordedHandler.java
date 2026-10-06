@@ -10,10 +10,14 @@ public class SensorReadingRecordedHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SensorReadingRecordedHandler.class);
 
+    private final SeismicCorrelationApplicationService correlationApplicationService;
+
+    public SensorReadingRecordedHandler(SeismicCorrelationApplicationService correlationApplicationService) {
+        this.correlationApplicationService = correlationApplicationService;
+    }
+
     public void handle(SensorReadingRecorded event) {
-        LOGGER.info(
-                "Sensor reading event {} received for seismic correlation",
-                event.eventId()
-        );
+        LOGGER.debug("Sensor reading event {} received for seismic correlation", event.eventId());
+        correlationApplicationService.recordReading(event);
     }
 }
