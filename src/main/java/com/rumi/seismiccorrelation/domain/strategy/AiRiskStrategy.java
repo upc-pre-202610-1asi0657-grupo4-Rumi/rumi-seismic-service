@@ -2,6 +2,13 @@ package com.rumi.seismiccorrelation.domain.strategy;
 
 public final class AiRiskStrategy implements RiskCalculationStrategy {
 
+    public static final String MODEL_VERSION = "ai-placeholder-v1";
+
+    @Override
+    public String modelVersion() {
+        return MODEL_VERSION;
+    }
+
     @Override
     public double calculateRiskIndex(double normalizedStructuralResponse) {
         validate(normalizedStructuralResponse);

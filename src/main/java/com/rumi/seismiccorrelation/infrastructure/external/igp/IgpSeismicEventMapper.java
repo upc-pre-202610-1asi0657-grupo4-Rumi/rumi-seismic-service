@@ -10,10 +10,12 @@ public class IgpSeismicEventMapper {
         return new SeismicEvent(
                 response.code(),
                 response.magnitude(),
+                response.magnitudeScale(),
                 response.timestamp(),
                 response.latitude(),
                 response.longitude(),
-                response.depthKm()
+                response.depthKm(),
+                response.reference()
         );
     }
 }

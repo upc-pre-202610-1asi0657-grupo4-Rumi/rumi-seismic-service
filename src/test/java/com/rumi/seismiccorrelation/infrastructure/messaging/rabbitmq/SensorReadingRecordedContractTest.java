@@ -5,6 +5,7 @@ import com.rumi.seismiccorrelation.domain.event.SensorReadingRecorded;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.amqp.support.converter.MessageConverter;
 
 import java.nio.charset.StandardCharsets;
@@ -12,16 +13,18 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SensorReadingRecordedContractTest {
 
     private static final String PAYLOAD = """
             {
               "eventId": "7c1f5b0e-3a52-4d0b-9f5e-2f6c1a8f4d11",
-              "sensorId": "b2a9d0f4-6c1e-4a57-8f0a-91d2c3e4f5a6",
-              "buildingId": "3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f",
+              "sensorId": "5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11",
+              "buildingId": "7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d",
+              "zone": "FLOOR-3-NORTH",
               "recordedAt": "2026-10-06T15:30:00Z",
-              "value": 0.018
+              "value": 0.42
             }""";
 
     @Test
@@ -39,10 +42,25 @@ class SensorReadingRecordedContractTest {
 
         assertThat(event).isEqualTo(new SensorReadingRecorded(
                 UUID.fromString("7c1f5b0e-3a52-4d0b-9f5e-2f6c1a8f4d11"),
-                UUID.fromString("b2a9d0f4-6c1e-4a57-8f0a-91d2c3e4f5a6"),
-                UUID.fromString("3f2c8a10-5d7b-4e9a-b1c2-0a1b2c3d4e5f"),
+                UUID.fromString("5d1c2f0e-8f4a-4a53-9a7e-0f3b1c9d7a11"),
+                UUID.fromString("7a9b3c1d-2e4f-4b6a-8c0d-1e2f3a4b5c6d"),
+                "FLOOR-3-NORTH",
                 Instant.parse("2026-10-06T15:30:00Z"),
-                0.018
+                0.42
         ));
+    }
+
+    @Test
+    void rejectsAnEventWithoutZone() {
+        MessageConverter converter = new SeismicCorrelationMessagingConfiguration()
+                .seismicCorrelationMessageConverter(JsonMapper.builder().findAndAddModules().build());
+        MessageProperties properties = new MessageProperties();
+        properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
+        properties.setInferredArgumentType(SensorReadingRecorded.class);
+        String payloadWithoutZone = PAYLOAD.replace("\"zone\": \"FLOOR-3-NORTH\",", "");
+
+        assertThatThrownBy(() -> converter.fromMessage(
+                new Message(payloadWithoutZone.getBytes(StandardCharsets.UTF_8), properties)))
+                .isInstanceOf(MessageConversionException.class);
     }
 }

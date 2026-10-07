@@ -1,5 +1,6 @@
 package com.rumi.seismiccorrelation.domain.service;
 
+import com.rumi.seismiccorrelation.domain.model.RiskLevel;
 import com.rumi.seismiccorrelation.domain.strategy.RiskCalculationStrategy;
 
 import java.util.Objects;
@@ -14,5 +15,14 @@ public final class RiskIndexCalculationService {
 
     public double calculateRiskIndex(double normalizedStructuralResponse) {
         return strategy.calculateRiskIndex(normalizedStructuralResponse);
+    }
+
+    /** Score of the strategy converted to a level with the thresholds documented in RiskLevel. */
+    public RiskLevel calculateLevel(double normalizedStructuralResponse) {
+        return RiskLevel.fromScore(calculateRiskIndex(normalizedStructuralResponse));
+    }
+
+    public String modelVersion() {
+        return strategy.modelVersion();
     }
 }
