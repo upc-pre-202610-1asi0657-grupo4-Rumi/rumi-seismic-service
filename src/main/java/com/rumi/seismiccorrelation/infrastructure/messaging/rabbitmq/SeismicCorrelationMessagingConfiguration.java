@@ -20,9 +20,17 @@ public class SeismicCorrelationMessagingConfiguration {
     public static final String SENSOR_READING_QUEUE = "rumi.seismic-correlation.sensor-reading-recorded";
     public static final String SENSOR_READING_ROUTING_KEY = "structural-monitoring.sensor-reading.recorded";
 
+    public static final String CORRELATED_EVENT_EXCHANGE = "rumi.seismic-correlation.events";
+    public static final String CORRELATED_EVENT_ROUTING_KEY = "seismic-correlation.event.correlated";
+
     @Bean
     public TopicExchange seismicCorrelationSensorReadingExchange() {
         return new TopicExchange(SENSOR_READING_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public TopicExchange seismicCorrelationEventsExchange() {
+        return new TopicExchange(CORRELATED_EVENT_EXCHANGE, true, false);
     }
 
     @Bean

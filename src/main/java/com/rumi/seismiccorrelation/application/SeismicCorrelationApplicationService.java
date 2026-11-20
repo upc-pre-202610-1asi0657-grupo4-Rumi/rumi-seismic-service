@@ -1,5 +1,7 @@
 package com.rumi.seismiccorrelation.application;
 
+import com.rumi.seismiccorrelation.domain.event.CorrelatedSeismicEventCreated;
+import com.rumi.seismiccorrelation.domain.event.CorrelatedSeismicEventPublisher;
 import com.rumi.seismiccorrelation.domain.event.SensorReadingRecorded;
 import com.rumi.seismiccorrelation.domain.model.AffectedZoneReport;
 import com.rumi.seismiccorrelation.domain.model.CorrelatedSeismicEvent;
@@ -14,6 +16,7 @@ import com.rumi.seismiccorrelation.domain.service.RiskIndexCalculationService;
 import com.rumi.seismiccorrelation.domain.service.SeismicCorrelationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -43,7 +46,27 @@ public class SeismicCorrelationApplicationService {
     private final CorrelatedSeismicEventRepository correlatedEventRepository;
     private final SeismicCorrelationService correlationService;
     private final RiskIndexCalculationService riskIndexCalculationService;
+    private final CorrelatedSeismicEventPublisher eventPublisher;
     private final Clock clock;
+
+    @Autowired
+    public SeismicCorrelationApplicationService(
+            RecentReadingStore recentReadingStore,
+            SeismicEventRepository seismicEventRepository,
+            CorrelatedSeismicEventRepository correlatedEventRepository,
+            SeismicCorrelationService correlationService,
+            RiskIndexCalculationService riskIndexCalculationService,
+            CorrelatedSeismicEventPublisher eventPublisher,
+            Clock clock
+    ) {
+        this.recentReadingStore = recentReadingStore;
+        this.seismicEventRepository = seismicEventRepository;
+        this.correlatedEventRepository = correlatedEventRepository;
+        this.correlationService = correlationService;
+        this.riskIndexCalculationService = riskIndexCalculationService;
+        this.eventPublisher = eventPublisher;
+        this.clock = clock;
+    }
 
     public SeismicCorrelationApplicationService(
             RecentReadingStore recentReadingStore,
@@ -53,12 +76,8 @@ public class SeismicCorrelationApplicationService {
             RiskIndexCalculationService riskIndexCalculationService,
             Clock clock
     ) {
-        this.recentReadingStore = recentReadingStore;
-        this.seismicEventRepository = seismicEventRepository;
-        this.correlatedEventRepository = correlatedEventRepository;
-        this.correlationService = correlationService;
-        this.riskIndexCalculationService = riskIndexCalculationService;
-        this.clock = clock;
+        this(recentReadingStore, seismicEventRepository, correlatedEventRepository,
+                correlationService, riskIndexCalculationService, event -> {}, clock);
     }
 
     /** Keeps the reading and correlates it with the stored events whose window contains it. */
@@ -95,6 +114,9 @@ public class SeismicCorrelationApplicationService {
         CorrelatedSeismicEvent correlation = correlationService.correlate(seismicEvent, buildingId, now);
         correlation.analyze(calculateRiskIndex(readings, now));
         CorrelatedSeismicEvent saved = correlatedEventRepository.save(correlation);
+        eventPublisher.publish(CorrelatedSeismicEventCreated.fromCorrelation(saved));
+        saved.markNotified();
+        saved = correlatedEventRepository.save(saved);
         LOGGER.info("Seismic event {} correlated with building {}: risk {}",
                 seismicEventId, buildingId, saved.getRiskIndex().map(RiskIndex::getLevel).orElse(null));
         return Optional.of(saved);

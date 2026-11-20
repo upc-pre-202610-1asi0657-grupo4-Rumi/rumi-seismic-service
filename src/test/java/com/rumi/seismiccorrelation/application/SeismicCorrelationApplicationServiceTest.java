@@ -1,5 +1,7 @@
 package com.rumi.seismiccorrelation.application;
 
+import com.rumi.seismiccorrelation.domain.event.CorrelatedSeismicEventCreated;
+import com.rumi.seismiccorrelation.domain.event.CorrelatedSeismicEventPublisher;
 import com.rumi.seismiccorrelation.domain.event.SensorReadingRecorded;
 import com.rumi.seismiccorrelation.domain.model.AffectedZoneReport;
 import com.rumi.seismiccorrelation.domain.model.CorrelatedSeismicEvent;
@@ -15,6 +17,7 @@ import com.rumi.seismiccorrelation.domain.strategy.RuleBasedRiskStrategy;
 import com.rumi.seismiccorrelation.infrastructure.memory.InMemoryRecentReadingStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -26,6 +29,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,6 +46,7 @@ class SeismicCorrelationApplicationServiceTest {
 
     private SeismicEventRepository seismicEventRepository;
     private CorrelatedSeismicEventRepository correlatedEventRepository;
+    private CorrelatedSeismicEventPublisher eventPublisher;
     private SeismicCorrelationApplicationService service;
 
     @BeforeEach
@@ -49,6 +54,7 @@ class SeismicCorrelationApplicationServiceTest {
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         seismicEventRepository = mock(SeismicEventRepository.class);
         correlatedEventRepository = mock(CorrelatedSeismicEventRepository.class);
+        eventPublisher = mock(CorrelatedSeismicEventPublisher.class);
         when(correlatedEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         service = new SeismicCorrelationApplicationService(
                 new InMemoryRecentReadingStore(clock, Duration.ofMinutes(30), 10_000),
@@ -56,12 +62,13 @@ class SeismicCorrelationApplicationServiceTest {
                 correlatedEventRepository,
                 new SeismicCorrelationService(Duration.ofMinutes(5), 1.0),
                 new RiskIndexCalculationService(new RuleBasedRiskStrategy()),
+                eventPublisher,
                 clock
         );
     }
 
     @Test
-    void correlatesAReadingWithAStoredEventWhoseWindowContainsIt() {
+    void correlatesAReadingWithAStoredEventWhoseWindowContainsItAndPublishesRiskEvent() {
         when(seismicEventRepository.findOccurredBetween(
                 Instant.parse("2026-10-06T15:25:30Z"), Instant.parse("2026-10-06T15:30:30Z")))
                 .thenReturn(List.of(EVENT));
@@ -71,7 +78,7 @@ class SeismicCorrelationApplicationServiceTest {
         assertThat(correlations).singleElement().satisfies(correlation -> {
             assertThat(correlation.getSeismicEventId()).isEqualTo(EVENT_ID);
             assertThat(correlation.getBuildingId()).isEqualTo(BUILDING_ID);
-            assertThat(correlation.getStatus()).isEqualTo(EventStatus.ANALYZED);
+            assertThat(correlation.getStatus()).isEqualTo(EventStatus.NOTIFIED);
             assertThat(correlation.getCorrelatedAt()).isEqualTo(NOW);
             RiskIndex riskIndex = correlation.getRiskIndex().orElseThrow();
             assertThat(riskIndex.getLevel()).isEqualTo(RiskLevel.HIGH);
@@ -79,8 +86,18 @@ class SeismicCorrelationApplicationServiceTest {
             assertThat(riskIndex.getCalculatedAt()).isEqualTo(NOW);
             assertThat(riskIndex.getAffectedZones()).extracting(AffectedZoneReport::zone)
                     .containsExactly("FLOOR-3-NORTH");
+
+            ArgumentCaptor<CorrelatedSeismicEventCreated> eventCaptor =
+                    ArgumentCaptor.forClass(CorrelatedSeismicEventCreated.class);
+            verify(eventPublisher).publish(eventCaptor.capture());
+            CorrelatedSeismicEventCreated published = eventCaptor.getValue();
+            assertThat(published.buildingId()).isEqualTo(BUILDING_ID);
+            assertThat(published.riskIndexId()).isEqualTo(riskIndex.getId());
+            assertThat(published.seismicEventId()).isEqualTo(EVENT_ID);
+            assertThat(published.riskLevel()).isEqualTo("HIGH");
+            assertThat(published.calculatedAt()).isEqualTo(NOW);
         });
-        verify(correlatedEventRepository).save(correlations.get(0));
+        verify(correlatedEventRepository, atLeastOnce()).save(correlations.get(0));
     }
 
     @Test
@@ -89,6 +106,7 @@ class SeismicCorrelationApplicationServiceTest {
 
         assertThat(service.recordReading(reading("FLOOR-3-NORTH", "15:30:30", 0.8))).isEmpty();
         verify(correlatedEventRepository, never()).save(any());
+        verify(eventPublisher, never()).publish(any());
     }
 
     @Test
@@ -98,6 +116,7 @@ class SeismicCorrelationApplicationServiceTest {
 
         assertThat(service.recordReading(reading("FLOOR-3-NORTH", "15:30:30", 0.8))).isEmpty();
         verify(correlatedEventRepository, never()).save(any());
+        verify(eventPublisher, never()).publish(any());
     }
 
     @Test
@@ -117,6 +136,7 @@ class SeismicCorrelationApplicationServiceTest {
                 .containsExactly(
                         tuple("FLOOR-3-NORTH", 1),
                         tuple("FLOOR-2-NORTH", 2));
+        verify(eventPublisher).publish(any(CorrelatedSeismicEventCreated.class));
     }
 
     @Test
@@ -128,6 +148,7 @@ class SeismicCorrelationApplicationServiceTest {
         RiskIndex riskIndex = correlations.get(0).getRiskIndex().orElseThrow();
         assertThat(riskIndex.getLevel()).isEqualTo(RiskLevel.LOW);
         assertThat(riskIndex.getAffectedZones()).isEmpty();
+        verify(eventPublisher).publish(any(CorrelatedSeismicEventCreated.class));
     }
 
     @Test
@@ -136,6 +157,7 @@ class SeismicCorrelationApplicationServiceTest {
         service.recordReading(reading("FLOOR-3-NORTH", "15:35:00", 0.8));
 
         assertThat(service.processOfficialEvent(EVENT)).isEmpty();
+        verify(eventPublisher, never()).publish(any());
     }
 
     private static SensorReadingRecorded reading(String zone, String time, double vibration) {
