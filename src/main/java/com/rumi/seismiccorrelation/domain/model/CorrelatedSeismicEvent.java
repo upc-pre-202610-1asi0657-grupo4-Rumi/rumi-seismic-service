@@ -45,6 +45,14 @@ public final class CorrelatedSeismicEvent {
         this.status = EventStatus.ANALYZED;
     }
 
+    /** ANALYZED -> NOTIFIED once the risk event is published. */
+    public void markNotified() {
+        if (status != EventStatus.ANALYZED) {
+            throw new IllegalStateException("Only an ANALYZED event can be marked as notified, this one is " + status);
+        }
+        this.status = EventStatus.NOTIFIED;
+    }
+
     public UUID getId() {
         return id;
     }
